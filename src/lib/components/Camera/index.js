@@ -4,17 +4,22 @@ import PropTypes from 'prop-types';
 // for debugging with git cloned jslib-html5-camera-photo
 // clone jslib-html5-camera-photo inside /src and replace
 // from 'jslib-html5-camera-photo' -> from '../../../jslib-html5-camera-photo/src/lib';
-import LibCameraPhoto, { FACING_MODES, IMAGE_TYPES } from 'jslib-html5-camera-photo';
+import LibCameraPhoto, {
+  FACING_MODES,
+  IMAGE_TYPES
+} from 'jslib-html5-camera-photo';
 
 import CircleButton from '../CircleButton';
 import WhiteFlash from '../WhiteFlash';
 import DisplayError from '../DisplayError';
 
-import {getShowHideStyle,
+import {
+  getShowHideStyle,
   getVideoStyles,
   isDynamicPropsUpdate,
   playClickAudio,
-  printCameraInfo} from './helpers';
+  printCameraInfo
+} from './helpers';
 import './styles/camera.css';
 
 /*
@@ -38,7 +43,7 @@ class Camera extends React.Component {
 
   componentDidMount () {
     this.libCameraPhoto = new LibCameraPhoto(this.videoRef.current);
-    const {idealFacingMode, idealResolution, isMaxResolution} = this.props;
+    const { idealFacingMode, idealResolution, isMaxResolution } = this.props;
     if (isMaxResolution) {
       this.startCameraMaxResolution(idealFacingMode);
     } else {
@@ -47,9 +52,9 @@ class Camera extends React.Component {
   }
 
   // eslint-disable-next-line
-  UNSAFE_componentWillReceiveProps (nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (isDynamicPropsUpdate(this.props, nextProps)) {
-      const {idealFacingMode, idealResolution, isMaxResolution} = nextProps;
+      const { idealFacingMode, idealResolution, isMaxResolution } = nextProps;
       this.restartCamera(idealFacingMode, idealResolution, isMaxResolution);
     }
   }
@@ -57,10 +62,9 @@ class Camera extends React.Component {
   componentWillUnmount () {
     this.clearShowVideoTimeout();
     const isComponentWillUnmount = true;
-    this.stopCamera(isComponentWillUnmount)
-      .catch((error) => {
-        printCameraInfo(error.message);
-      });
+    this.stopCamera(isComponentWillUnmount).catch(error => {
+      printCameraInfo(error.message);
+    });
   }
 
   clearShowVideoTimeout () {
@@ -72,7 +76,7 @@ class Camera extends React.Component {
   restartCamera (idealFacingMode, idealResolution, isMaxResolution) {
     this.stopCamera()
       .then()
-      .catch((error) => {
+      .catch(error => {
         printCameraInfo(error.message);
       })
       .then(() => {
@@ -86,7 +90,7 @@ class Camera extends React.Component {
 
   startCamera (promiseStartCamera) {
     promiseStartCamera
-      .then((stream) => {
+      .then(stream => {
         this.setState({
           isCameraStarted: true,
           startCameraErrorMsg: ''
@@ -95,7 +99,7 @@ class Camera extends React.Component {
           this.props.onCameraStart(stream);
         }
       })
-      .catch((error) => {
+      .catch(error => {
         this.setState({
           startCameraErrorMsg: `${error.name} ${error.message}`
         });
@@ -106,20 +110,24 @@ class Camera extends React.Component {
   }
 
   startCameraIdealResolution (idealFacingMode, idealResolution) {
-    let promiseStartCamera =
-        this.libCameraPhoto.startCamera(idealFacingMode, idealResolution);
+    let promiseStartCamera = this.libCameraPhoto.startCamera(
+      idealFacingMode,
+      idealResolution
+    );
     this.startCamera(promiseStartCamera);
   }
 
   startCameraMaxResolution (idealFacingMode) {
-    let promiseStartCamera =
-        this.libCameraPhoto.startCameraMaxResolution(idealFacingMode);
+    let promiseStartCamera = this.libCameraPhoto.startCameraMaxResolution(
+      idealFacingMode
+    );
     this.startCamera(promiseStartCamera);
   }
 
   stopCamera (isComponentWillUnmount = false) {
     return new Promise((resolve, reject) => {
-      this.libCameraPhoto.stopCamera()
+      this.libCameraPhoto
+        .stopCamera()
         .then(() => {
           if (!isComponentWillUnmount) {
             this.setState({ isCameraStarted: false });
@@ -129,7 +137,7 @@ class Camera extends React.Component {
           }
           resolve();
         })
-        .catch((error) => {
+        .catch(error => {
           if (typeof this.props.onCameraError === 'function') {
             this.props.onCameraError(error);
           }
@@ -139,8 +147,19 @@ class Camera extends React.Component {
   }
 
   handleTakePhoto () {
-    const {sizeFactor, imageType, imageCompression, isImageMirror, isSilentMode} = this.props;
-    const configDataUri = { sizeFactor, imageType, imageCompression, isImageMirror };
+    const {
+      sizeFactor,
+      imageType,
+      imageCompression,
+      isImageMirror,
+      isSilentMode
+    } = this.props;
+    const configDataUri = {
+      sizeFactor,
+      imageType,
+      imageCompression,
+      isImageMirror
+    };
 
     if (!isSilentMode) {
       playClickAudio();
@@ -170,29 +189,38 @@ class Camera extends React.Component {
   }
 
   render () {
-    const {isImageMirror, isDisplayStartCameraError, isFullscreen} = this.props;
+    const {
+      isImageMirror,
+      isDisplayStartCameraError,
+      isFullscreen,
+      wrapperStyle,
+      wrapperClassName,
+      videoStyle
+    } = this.props;
 
     let videoStyles = getVideoStyles(this.state.isShowVideo, isImageMirror);
     let showHideImgStyle = getShowHideStyle(!this.state.isShowVideo);
 
-    let classNameFullscreen = isFullscreen ? 'react-html5-camera-photo-fullscreen' : '';
+    let classNameFullscreen = isFullscreen
+      ? 'react-html5-camera-photo-fullscreen'
+      : '';
     return (
-      <div className={'react-html5-camera-photo ' + classNameFullscreen}>
+      <div
+        className={
+          'react-html5-camera-photo ' +
+          classNameFullscreen +
+          (wrapperClassName || '')
+        }
+        style={wrapperStyle}>
         <DisplayError
           cssClass={'display-error'}
           isDisplayError={isDisplayStartCameraError}
           errorMsg={this.state.startCameraErrorMsg}
         />
-        <WhiteFlash
-          isShowWhiteFlash={!this.state.isShowVideo}
-        />
-        <img
-          style={showHideImgStyle}
-          alt="camera"
-          src={this.state.dataUri}
-        />
+        <WhiteFlash isShowWhiteFlash={!this.state.isShowVideo} />
+        <img style={showHideImgStyle} alt="camera" src={this.state.dataUri} />
         <video
-          style={videoStyles}
+          style={{ ...videoStyles, ...videoStyle }}
           ref={this.videoRef}
           autoPlay={true}
           muted="muted"
@@ -207,15 +235,14 @@ class Camera extends React.Component {
   }
 }
 
-export {
-  Camera,
-  FACING_MODES,
-  IMAGE_TYPES
-};
+export { Camera, FACING_MODES, IMAGE_TYPES };
 
 export default Camera;
 
 Camera.propTypes = {
+  wrapperStyle: PropTypes.object,
+  wrapperClassName: PropTypes.string,
+  videoStyle: PropTypes.object,
   onTakePhoto: PropTypes.func,
   onTakePhotoAnimationDone: PropTypes.func,
   onCameraError: PropTypes.func,
